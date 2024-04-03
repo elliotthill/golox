@@ -51,8 +51,8 @@ func (interp *Interpreter) visitBinaryExpression(expr Binary) interface{} {
 	left := interp.evaluate(expr.left)
 	right := interp.evaluate(expr.right)
 
-	left_double, _ := strconv.Atoi(fmt.Sprintf("%v", left))
-	right_double, _ := strconv.Atoi(fmt.Sprintf("%v", right))
+	left_double, _ := strconv.ParseFloat(fmt.Sprintf("%v", left), 64)
+	right_double, _ := strconv.ParseFloat(fmt.Sprintf("%v", right), 64)
 
 	switch operator_type := expr.operator.tokenType; operator_type {
 	case GREATER:
@@ -102,17 +102,18 @@ func (interp *Interpreter) stringify(thing interface{}) string {
 		return "nil"
 	}
 
-	//Try to convert to string
-	str, ok := thing.(string)
-	if !ok {
+    switch v := thing.(type) {
+    case bool:
+        return strconv.FormatBool(v)
+    case int:
+        return fmt.Sprintf("Integer: %v", v)
+    case float64:
+        return fmt.Sprintf("Float64: %v", v)
+    case string:
+        return v
+    default:
+        return "<glox object>"
+    }
 
-		b, b_ok := thing.(bool)
-		if b_ok {
-			return strconv.FormatBool(b)
-		}
-
-		return "<object>"
-	}
-	return str
 
 }
