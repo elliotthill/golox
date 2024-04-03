@@ -6,17 +6,26 @@ Golox is a general purpose programming language. It is a Go implementation of Lo
 
 ### Running the REPL
 To run the REPL, simply type
+
 `go run .`
 
 It can interpret equality expressions
-`> print 1==1;
-true`
-`> print 'test' == 'test';
-true`
+
+```
+> print 1==1;
+true
+```
+
+```
+> print 'test' == 'test';
+true
+```
 
 And comparison
-`> print 5 > 10;
-false`
+```
+> print 5 > 10;
+false
+```
 
 
 ## Debug Mode
