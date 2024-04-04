@@ -10,9 +10,12 @@ type callable interface{
 type RuntimeFunction struct{
     callable
     declaration Function
+    closure *Environment
 }
 
 func (f RuntimeFunction) call(interp *Interpreter, arguments []interface{}) (returnVal interface{}) {
+
+    funcEnv := NewEnvironment(interp.globals)
 
     //We catch the function return in a panic
     defer func() {
@@ -28,11 +31,15 @@ func (f RuntimeFunction) call(interp *Interpreter, arguments []interface{}) (ret
         }
     }()
 
+    //callEnv := NewEnvironment(f.closure)
+    //callEnv := interp.environment
+
     for i, param := range f.declaration.params {
-        interp.env[param.lexeme] = arguments[i]
+        //interp.environment[param.lexeme] = arguments[i]
+        funcEnv.Define(param.lexeme, arguments[i])
     }
 
-    interp.executeBlock(f.declaration.body)//, interp.env)
+    interp.executeBlock(f.declaration.body, funcEnv)
     return nil
 
 }

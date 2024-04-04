@@ -10,14 +10,16 @@ type Interpreter struct {
 	ExpressionVisitor
 	StatementVisitor
 	statements []AbstractStatement
-	env    map[string]interface{}
+    environment *Environment
+    globals *Environment
 }
 
 func NewInterpreter() *Interpreter{
 	interp := new(Interpreter)
 
     //interp.environment = NewEnv(nil)
-    interp.env = make(map[string]interface{})
+    interp.globals = NewEnvironment(nil)
+    interp.environment = interp.globals
     fmt.Println("Initialized interpreter")
     return interp
 }
@@ -75,12 +77,19 @@ func (interp *Interpreter) visitWhileStatement(stmt While) interface{} {
 
 func (interp *Interpreter) visitBlockStatement(stmt Block) interface{} {
 
-    interp.executeBlock(stmt.statements)
+    env := NewEnvironment(interp.environment)
+    interp.executeBlock(stmt.statements, env)
     return nil
 }
 
-func (interp *Interpreter) executeBlock(statements []AbstractStatement) {
+func (interp *Interpreter) executeBlock(statements []AbstractStatement, env *Environment) {
 
+    previous := interp.environment
+    defer func() {
+        interp.environment = previous
+    }()
+
+    interp.environment = env
     for _, statement := range statements{
 
         interp.execute(statement)
@@ -93,8 +102,8 @@ func (interp *Interpreter) visitVarStatement(stmt Var) interface{} {
     if stmt.initializer != nil {
         value = interp.evaluate(stmt.initializer)
     }
-    //interp.environment.Define(stmt.name.lexeme, value)
-    interp.env[stmt.name.lexeme] = value
+    interp.environment.Define(stmt.name.lexeme, value)
+    //interp.env[stmt.name.lexeme] = value
     return nil
 
 }
@@ -104,7 +113,8 @@ func (interp *Interpreter) visitFunctionStatement(stmt Function) interface{} {
     function := RuntimeFunction{}
     function.declaration = stmt
 
-    interp.env[stmt.name.lexeme] = function
+    interp.environment.Define(stmt.name.lexeme, function)
+    //interp.env[stmt.name.lexeme] = function
     return nil
 }
 
@@ -176,8 +186,8 @@ func (interp *Interpreter) visitBinaryExpression(expr Binary) interface{} {
 	left := interp.evaluate(expr.left)
 	right := interp.evaluate(expr.right)
 
-	left_double, _ := strconv.ParseFloat(fmt.Sprintf("%v", left), 64)
-	right_double, _ := strconv.ParseFloat(fmt.Sprintf("%v", right), 64)
+	left_double, _ := left.(float64)
+	right_double, _ := right.(float64)
 
 	switch operator_type := expr.operator.tokenType; operator_type {
 	case GREATER:
@@ -209,16 +219,33 @@ func (interp *Interpreter) visitBinaryExpression(expr Binary) interface{} {
 }
 
 func (interp *Interpreter) visitVariableExpression(expr Variable) interface{} {
-    if val, ok := interp.env[expr.name.lexeme]; ok {
-		return val
-	}
-    return nil
+
+    val := interp.lookupVariable(expr.name.lexeme)
+
+    if val == nil {
+        panic("Undefined variable "+expr.name.lexeme+" ")
+    }
+    return val
 }
 
 func (interp *Interpreter) visitAssignExpression(expr Assign) interface{} {
 
     value := interp.evaluate(expr.value)
-    interp.env[expr.name.lexeme] = value
+    //interp.env[expr.name.lexeme] = value
+    interp.environment.Assign(expr.name.lexeme, value)
+
+
+    return value
+}
+
+func (interp *Interpreter) lookupVariable(name string) interface{} {
+
+    value := interp.environment.Get(name)
+
+    if value == nil {
+        value = interp.globals.Get(name)
+    }
+
     return value
 }
 
@@ -271,6 +298,7 @@ func (interp *Interpreter) stringify(thing interface{}) string {
 	if thing == nil {
 		return "nil"
 	}
+    return fmt.Sprint(thing)
 
     switch v := thing.(type) {
     case bool:
