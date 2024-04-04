@@ -9,24 +9,30 @@ To run the REPL, simply type
 
 `go run .`
 
-It can interpret equality expressions
+### Executing a file
+To execute a file in the current directory use the -f flag
+`go run. -f test.glx`
 
+### Usage example: Print fibonacci numbers
 ```
-> print 1==1;
-true
-```
-
-```
-> print 'test' == 'test';
-true
-```
-
-And comparison
-```
-> print 5 > 10;
-false
+fun fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 2) + fib(n - 1);
+}
+for (var i = 0; i < 20; i = i + 1) {
+  print fib(i);
+}
 ```
 
+Output
+```
+0
+1
+1
+2
+..
+4181
+```
 
 ## Debug Mode
 Add the flag -d to enable debug mode
