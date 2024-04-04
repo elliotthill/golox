@@ -9,9 +9,12 @@ To run the REPL, simply type
 
 `go run .`
 
+
 ### Executing a file
 To execute a file in the current directory use the -f flag
+
 `go run. -f test.glx`
+
 
 ### Usage example: Print fibonacci numbers
 ```
