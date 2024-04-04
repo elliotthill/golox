@@ -174,7 +174,7 @@ func (scanner *Scanner) isDigit(char string) bool {
 func (scanner *Scanner) isAlpha(char string) bool {
 
     for _, c := range char {
-        return unicode.IsLetter(c)
+        return unicode.IsLetter(c) || c == '_'
     }
     return false
 }

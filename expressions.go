@@ -32,7 +32,6 @@ type Assign struct{
 }
 
 func (assign Assign) Accept(visitor ExpressionVisitor) interface{} {
-    fmt.Println("Assign Expression")
     return visitor.visitAssignExpression(assign)
 }
 
@@ -113,7 +112,7 @@ type Call struct{
 }
 
 func (call Call) Accept(visitor ExpressionVisitor) interface{} {
-    return visitor.VisitCallExpression(call)
+    return visitor.visitCallExpression(call)
 }
 
 type ExpressionVisitor interface {
@@ -125,7 +124,7 @@ type ExpressionVisitor interface {
     visitTernaryExpression(expression Ternary) interface{}
     visitUnaryExpression(expression Unary) interface{}
     visitVariableExpression(expression Variable) interface{}
-    VisitCallExpression(expression Call) interface{}
+    visitCallExpression(expression Call) interface{}
 }
 
 

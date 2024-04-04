@@ -25,7 +25,7 @@ func main() {
 			return
 		}
 
-		Run(sourceCode, &Interpreter{}, debug)
+		Run(sourceCode, NewInterpreter(), debug)
 
 	} else {
 
@@ -69,7 +69,7 @@ func Run(source string, interpreter *Interpreter, debug bool) {
 func REPL(debug bool) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("> ")
-	interp := Interpreter{}
+	interp := NewInterpreter()
 
 	for {
 		line, _, err := reader.ReadLine()
@@ -83,7 +83,7 @@ func REPL(debug bool) {
 			os.Exit(1)
 		}
 
-		Run(string(line), &interp, debug)
+		Run(string(line), interp, debug)
 		fmt.Print("> ")
 
 	}
