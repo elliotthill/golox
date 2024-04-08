@@ -17,6 +17,7 @@ To execute a file in the current directory use the -f flag
 
 
 ### Usage example: Print fibonacci numbers
+Demonstrating: if statements, functions, for loops, and recursive function calls
 ```
 fun fib(n) {
   if (n <= 1) return n;
