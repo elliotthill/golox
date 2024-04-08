@@ -26,7 +26,7 @@ func (parser *Parser) Parse() []AbstractStatement {
 
 func (parser *Parser) declaration() AbstractStatement {
 
-    if parser.match(FUN) {
+    if parser.match(FUN) && parser.check(IDENTIFIER) {
         return parser.function("function")
     }
 
@@ -346,7 +346,7 @@ func (parser *Parser) unary() AbstractExpression {
 
 func (parser *Parser) call() AbstractExpression {
 
-    expr := parser.primary()
+    expr := parser.functionExpression()
 
     for parser.match(LEFT_PAREN) {
         expr = parser.finishCall(expr)
@@ -370,6 +370,28 @@ func (parser *Parser) finishCall(callee AbstractExpression) AbstractExpression {
     paren := parser.consume(RIGHT_PAREN, "Expect ')' after arguments")
 
     return Call{callee: callee, paren: paren, arguments: arguments }
+}
+
+func (parser *Parser) functionExpression() AbstractExpression {
+
+    if parser.match(FUN) {
+
+        fmt.Println("We got here")
+        parameters := []Token{}
+        parser.consume(LEFT_PAREN, "Expect '(' after fun keyword")
+
+        for params := true; params; params = parser.match(COMMA) {
+            parameters = append(parameters,
+                parser.consume(IDENTIFIER, "Expect parameter name"))
+        }
+
+        parser.consume(RIGHT_PAREN, "Expect ')' after parameters")
+        parser.consume(LEFT_BRACE, "Expect '{' before function body")
+        body := parser.block()
+        return FunctionExpression{params: parameters, body: body}
+    }
+
+    return parser.primary()
 }
 
 func (parser *Parser) primary() AbstractExpression {

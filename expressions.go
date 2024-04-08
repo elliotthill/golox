@@ -115,6 +115,18 @@ func (call Call) Accept(visitor ExpressionVisitor) interface{} {
     return visitor.visitCallExpression(call)
 }
 
+
+//Anonymous functions
+type FunctionExpression struct{
+    AbstractExpression
+    params []Token
+    body []AbstractStatement
+}
+
+func (funcExpr FunctionExpression) Accept(visitor ExpressionVisitor) interface{} {
+    return visitor.visitFunctionExpression(funcExpr);
+}
+
 type ExpressionVisitor interface {
     visitAssignExpression(expression Assign) interface{}
     visitBinaryExpression(expression Binary) interface{}
@@ -125,6 +137,7 @@ type ExpressionVisitor interface {
     visitUnaryExpression(expression Unary) interface{}
     visitVariableExpression(expression Variable) interface{}
     visitCallExpression(expression Call) interface{}
+    visitFunctionExpression(expression FunctionExpression) interface{}
 }
 
 

@@ -15,7 +15,7 @@ type RuntimeFunction struct{
 
 func (f RuntimeFunction) call(interp *Interpreter, arguments []interface{}) (returnVal interface{}) {
 
-    funcEnv := NewEnvironment(interp.globals)
+    funcEnv := NewEnvironment(f.closure)
 
     //We catch the function return in a panic
     defer func() {
