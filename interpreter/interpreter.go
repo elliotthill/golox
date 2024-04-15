@@ -1,9 +1,10 @@
-package main
+package interpreter
 
 import (
 	"fmt"
 	"reflect"
 	"strconv"
+    ."github.com/elliotthill/golox/language"
 )
 
 type Interpreter struct {
@@ -24,6 +25,10 @@ func NewInterpreter() *Interpreter {
 	return interp
 }
 
+func (interp *Interpreter) SetStatements(statements []AbstractStatement) {
+   interp.statements = statements
+}
+
 func (interp *Interpreter) Interpret() {
 
 	for _, stmt := range interp.statements {
@@ -41,15 +46,15 @@ func (interp *Interpreter) execute(stmt AbstractStatement) {
 /*
 * Statements
  */
-func (interp *Interpreter) visitPrintStatement(stmt Print) interface{} {
+func (interp *Interpreter) VisitPrintStatement(stmt Print) interface{} {
 
-	value := interp.evaluate(stmt.expression)
+	value := interp.evaluate(stmt.Expression)
 	fmt.Println(interp.stringify(value))
 	return nil
 }
 
-func (interp *Interpreter) visitExpressionStatement(stmt Expression) interface{} {
-	interp.evaluate(stmt.expression)
+func (interp *Interpreter) VisitExpressionStatement(stmt Expression) interface{} {
+	interp.evaluate(stmt.Expression)
 	return nil
 }
 
@@ -57,29 +62,29 @@ type ReturnValue struct {
 	value interface{}
 }
 
-func (interp *Interpreter) visitReturnStatement(stmt Return) interface{} {
+func (interp *Interpreter) VisitReturnStatement(stmt Return) interface{} {
 	var value interface{} = nil
 
-	if stmt.value != nil {
-		value = interp.evaluate(stmt.value)
+	if stmt.Value != nil {
+		value = interp.evaluate(stmt.Value)
 	}
 
 	//throw new Return(value)
 	panic(ReturnValue{value: value})
 }
 
-func (interp *Interpreter) visitWhileStatement(stmt While) interface{} {
+func (interp *Interpreter) VisitWhileStatement(stmt While) interface{} {
 
-	for interp.isTruthy(interp.evaluate(stmt.condition)) {
-		interp.execute(stmt.body)
+	for interp.isTruthy(interp.evaluate(stmt.Condition)) {
+		interp.execute(stmt.Body)
 	}
 	return nil
 }
 
-func (interp *Interpreter) visitBlockStatement(stmt Block) interface{} {
+func (interp *Interpreter) VisitBlockStatement(stmt Block) interface{} {
 
 	env := NewEnvironment(interp.environment)
-	interp.executeBlock(stmt.statements, env)
+	interp.executeBlock(stmt.Statements, env)
 	return nil
 }
 
@@ -97,35 +102,35 @@ func (interp *Interpreter) executeBlock(statements []AbstractStatement, env *Env
 	}
 }
 
-func (interp *Interpreter) visitVarStatement(stmt Var) interface{} {
+func (interp *Interpreter) VisitVarStatement(stmt Var) interface{} {
 
 	var value interface{} = nil
-	if stmt.initializer != nil {
-		value = interp.evaluate(stmt.initializer)
+	if stmt.Initializer != nil {
+		value = interp.evaluate(stmt.Initializer)
 	}
-	interp.environment.Define(stmt.name.lexeme, value)
+	interp.environment.Define(stmt.Name.Lexeme, value)
 	//interp.env[stmt.name.lexeme] = value
 	return nil
 
 }
 
-func (interp *Interpreter) visitFunctionStatement(stmt Function) interface{} {
+func (interp *Interpreter) VisitFunctionStatement(stmt Function) interface{} {
 
 	function := RuntimeFunction{}
 	function.declaration = stmt
     function.closure = interp.environment
 
-	interp.environment.Define(stmt.name.lexeme, function)
+	interp.environment.Define(stmt.Name.Lexeme, function)
 	//interp.env[stmt.name.lexeme] = function
 	return nil
 }
 
-func (interp *Interpreter) visitIfStatement(stmt If) interface{} {
+func (interp *Interpreter) VisitIfStatement(stmt If) interface{} {
 
-	if interp.isTruthy(interp.evaluate(stmt.condition)) {
-		interp.execute(stmt.thenBranch)
-	} else if stmt.elseBranch != nil {
-		interp.execute(stmt.elseBranch)
+	if interp.isTruthy(interp.evaluate(stmt.Condition)) {
+		interp.execute(stmt.ThenBranch)
+	} else if stmt.ElseBranch != nil {
+		interp.execute(stmt.ElseBranch)
 	}
 	return nil
 }
@@ -133,18 +138,18 @@ func (interp *Interpreter) visitIfStatement(stmt If) interface{} {
 /*
 * Expression
  */
-func (interp *Interpreter) visitCallExpression(expr Call) interface{} {
+func (interp *Interpreter) VisitCallExpression(expr Call) interface{} {
 
-	callee := interp.evaluate(expr.callee)
+	callee := interp.evaluate(expr.Callee)
 	var arguments []interface{}
 
-	for _, arg := range expr.arguments {
+	for _, arg := range expr.Arguments {
 		arguments = append(arguments, interp.evaluate(arg))
 	}
 
 	fn, ok := (callee).(callable)
 	if !ok {
-		panic("Can only call fucntions and classes")
+		panic("Can only call functions and classes")
 	}
 
 	if len(arguments) != fn.arity() {
@@ -155,18 +160,18 @@ func (interp *Interpreter) visitCallExpression(expr Call) interface{} {
 }
 
 
-func (interp *Interpreter) visitFunctionExpression(expr FunctionExpression) interface{} {
+func (interp *Interpreter) VisitFunctionExpression(expr FunctionExpression) interface{} {
 
 	function := RuntimeFunction{}
 
     //We replace the expression with the function statement here
-    functionStmt := Function{params: expr.params, body: expr.body}
+    functionStmt := Function{Params: expr.Params, Body: expr.Body}
 	function.declaration = functionStmt;
 
     function.closure = interp.environment
 
+    //Anonymous functions aren't defined
 	//interp.environment.Define(expr.name.lexeme, function)
-	//interp.env[stmt.name.lexeme] = function
 	return function
 }
 
@@ -175,14 +180,14 @@ func (interp *Interpreter) evaluate(expr AbstractExpression) interface{} {
 	return expr.Accept(interp)
 }
 
-func (interp *Interpreter) visitLiteralExpression(expr Literal) interface{} {
-	return expr.value
+func (interp *Interpreter) VisitLiteralExpression(expr Literal) interface{} {
+	return expr.Value
 }
 
-func (interp *Interpreter) visitUnaryExpression(expr Unary) interface{} {
-	right := interp.evaluate(expr.right)
+func (interp *Interpreter) VisitUnaryExpression(expr Unary) interface{} {
+	right := interp.evaluate(expr.Right)
 
-	switch expr.operator.tokenType {
+	switch expr.Operator.TokenType {
 	case BANG:
 		return !interp.isTruthy(right)
 	case MINUS:
@@ -193,19 +198,19 @@ func (interp *Interpreter) visitUnaryExpression(expr Unary) interface{} {
 	return nil
 }
 
-func (interp *Interpreter) visitGroupingExpression(expr Grouping) interface{} {
-	return interp.evaluate(expr.expression)
+func (interp *Interpreter) VisitGroupingExpression(expr Grouping) interface{} {
+	return interp.evaluate(expr.Expression)
 }
 
-func (interp *Interpreter) visitBinaryExpression(expr Binary) interface{} {
+func (interp *Interpreter) VisitBinaryExpression(expr Binary) interface{} {
 
-	left := interp.evaluate(expr.left)
-	right := interp.evaluate(expr.right)
+	left := interp.evaluate(expr.Left)
+	right := interp.evaluate(expr.Right)
 
 	left_double, _ := left.(float64)
 	right_double, _ := right.(float64)
 
-	switch operator_type := expr.operator.tokenType; operator_type {
+	switch operator_type := expr.Operator.TokenType; operator_type {
 	case GREATER:
 		return left_double > right_double
 	case GREATER_EQUAL:
@@ -234,21 +239,21 @@ func (interp *Interpreter) visitBinaryExpression(expr Binary) interface{} {
 	return nil
 }
 
-func (interp *Interpreter) visitVariableExpression(expr Variable) interface{} {
+func (interp *Interpreter) VisitVariableExpression(expr Variable) interface{} {
 
-	val := interp.lookupVariable(expr.name.lexeme)
+	val := interp.lookupVariable(expr.Name.Lexeme)
 
 	if val == nil {
-		panic("Undefined variable " + expr.name.lexeme + " ")
+		panic("Undefined variable " + expr.Name.Lexeme + " ")
 	}
 	return val
 }
 
-func (interp *Interpreter) visitAssignExpression(expr Assign) interface{} {
+func (interp *Interpreter) VisitAssignExpression(expr Assign) interface{} {
 
-	value := interp.evaluate(expr.value)
+	value := interp.evaluate(expr.Value)
 	//interp.env[expr.name.lexeme] = value
-	interp.environment.Assign(expr.name.lexeme, value)
+	interp.environment.Assign(expr.Name.Lexeme, value)
 
 	return value
 }

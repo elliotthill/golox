@@ -1,6 +1,9 @@
-package main
+package interpreter
 
-import "fmt"
+import (
+    "fmt"
+    ."github.com/elliotthill/golox/language"
+)
 
 type callable interface{
     arity() int
@@ -34,16 +37,16 @@ func (f RuntimeFunction) call(interp *Interpreter, arguments []interface{}) (ret
     //callEnv := NewEnvironment(f.closure)
     //callEnv := interp.environment
 
-    for i, param := range f.declaration.params {
+    for i, param := range f.declaration.Params {
         //interp.environment[param.lexeme] = arguments[i]
-        funcEnv.Define(param.lexeme, arguments[i])
+        funcEnv.Define(param.Lexeme, arguments[i])
     }
 
-    interp.executeBlock(f.declaration.body, funcEnv)
+    interp.executeBlock(f.declaration.Body, funcEnv)
     return nil
 
 }
 
 func (f RuntimeFunction) arity() int {
-   return len(f.declaration.params)
+   return len(f.declaration.Params)
 }

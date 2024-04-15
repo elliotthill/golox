@@ -1,4 +1,4 @@
-package main
+package language
 
 import "fmt"
 
@@ -57,11 +57,11 @@ const (
 
 )
 
-var keywords = map[string]TokenType{
-    "and": AND,
-    "class": CLASS,
-    "else": ELSE,
-    "false": FALSE,
+var Keywords = map[string]TokenType{
+    "and": "AND",
+    "class": "CLASS",
+    "else": "ELSE",
+    "false": "FALSE",
     "for": "FOR",
     "fun": "FUN",
     "if": "IF",
@@ -78,22 +78,22 @@ var keywords = map[string]TokenType{
 }
 
 type Token struct{
-    tokenType TokenType;
-    lexeme string;
-    literal interface{};
-    line int;
+    TokenType TokenType;
+    Lexeme string;
+    Literal interface{};
+    Line int;
 }
 
 func NewToken(tokenType TokenType, lexeme string, literal interface{}, line int) *Token {
     token := new(Token)
-    token.tokenType = tokenType
-    token.lexeme = lexeme
-    token.literal = literal
-    token.line = line
+    token.TokenType = tokenType
+    token.Lexeme = lexeme
+    token.Literal = literal
+    token.Line = line
     return token
 }
 
 func (token *Token) String() string {
 
-    return fmt.Sprintf("%s %s %s",token.tokenType,token.lexeme, token.literal)
+    return fmt.Sprintf("%s %s %s",token.TokenType,token.Lexeme, token.Literal)
 }

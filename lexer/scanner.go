@@ -1,9 +1,10 @@
-package main
+package lexer
 
 import (
 	"fmt"
 	"strconv"
 	"unicode"
+    . "github.com/elliotthill/golox/language"
 )
 
 type Scanner struct {
@@ -208,7 +209,7 @@ func (scanner *Scanner) identifier() {
     }
 
     text := scanner.source[scanner.start:scanner.current]
-    tokenType, ok := keywords[text]
+    tokenType, ok := Keywords[text]
 
     if (!ok) {
         tokenType = IDENTIFIER

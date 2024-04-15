@@ -6,6 +6,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+    "github.com/elliotthill/golox/interpreter"
+    "github.com/elliotthill/golox/parser"
+    "github.com/elliotthill/golox/lexer"
 )
 
 func main() {
@@ -13,7 +16,7 @@ func main() {
 	var file string
 	var debug bool
 
-	flag.StringVar(&file, "f", "", "Input File")
+    flag.StringVar(&file, "f", "", "Input File")
 	flag.BoolVar(&debug, "d", false, "Debug Mode")
 	flag.Parse()
 
@@ -25,7 +28,7 @@ func main() {
 			return
 		}
 
-		Run(sourceCode, NewInterpreter(), debug)
+		Run(sourceCode, interpreter.NewInterpreter(), debug)
 
 	} else {
 
@@ -34,9 +37,9 @@ func main() {
 
 }
 
-func Run(source string, interpreter *Interpreter, debug bool) {
+func Run(source string, interpreter *interpreter.Interpreter, debug bool) {
 
-	scanner := Scanner{source: source}
+	scanner := lexer.NewScanner(source)
 	tokens := scanner.Scan()
 
 	if debug {
@@ -48,7 +51,7 @@ func Run(source string, interpreter *Interpreter, debug bool) {
 		}
 	}
 
-	parser := Parser{tokens: tokens}
+	parser := parser.NewParser(tokens)
 	statements := parser.Parse()
 
 	if debug {
@@ -61,7 +64,7 @@ func Run(source string, interpreter *Interpreter, debug bool) {
 		fmt.Println("== Interp ==")
 	}
 
-	interpreter.statements = statements
+    interpreter.SetStatements(statements);
 	interpreter.Interpret()
 
 }
@@ -69,7 +72,7 @@ func Run(source string, interpreter *Interpreter, debug bool) {
 func REPL(debug bool) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("> ")
-	interp := NewInterpreter()
+	interp := interpreter.NewInterpreter()
 
 	for {
 		line, _, err := reader.ReadLine()

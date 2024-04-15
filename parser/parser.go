@@ -1,6 +1,9 @@
-package main
+package parser
 
-import "fmt"
+import (
+    "fmt"
+     . "github.com/elliotthill/golox/language"
+)
 
 type Parser struct {
 	tokens     []Token
@@ -8,14 +11,21 @@ type Parser struct {
 	statements []AbstractStatement
 }
 
-func NewParser(tokens []Token) {
+func NewParser(tokens []Token) *Parser{
 
 	parser := new(Parser)
 	parser.current = 0
 	parser.tokens = tokens
+    return parser
 }
 
 func (parser *Parser) Parse() []AbstractStatement {
+
+    defer func() {
+        if r:= recover(); r!= nil {
+            fmt.Println(fmt.Sprintf("Parse error on line %d\n%s", parser.current, r));
+        }
+    }()
 
 	for !parser.isAtEnd() {
 		parser.statements = append(parser.statements, parser.declaration())
@@ -55,7 +65,7 @@ func (parser *Parser) statement() AbstractStatement {
         return parser.whileStatement()
     }
     if parser.match(LEFT_BRACE) {
-        return Block{statements: parser.block()}
+        return Block{Statements: parser.block()}
     }
 
 	return parser.expressionStatement()
@@ -65,7 +75,7 @@ func (parser *Parser) printStatement() AbstractStatement {
 
 	value := parser.expression()
 	parser.consume(SEMICOLON, "Expected ; after value.")
-	return Print{expression: value}
+	return Print{Expression: value}
 }
 
 func (parser *Parser) expressionStatement() AbstractStatement {
@@ -73,7 +83,7 @@ func (parser *Parser) expressionStatement() AbstractStatement {
 	expr := parser.expression()
 	parser.consume(SEMICOLON, "Expect ; after expression.")
 
-	expr_statement := Expression{expression: expr}
+	expr_statement := Expression{Expression: expr}
 	return expr_statement
 }
 
@@ -95,7 +105,7 @@ func (parser *Parser) function(kind string) Function {
     parser.consume(RIGHT_PAREN, "Expect ')' after parameters.")
     parser.consume(LEFT_BRACE, "Expect '{' before " + kind + " body.")
     body := parser.block()
-    return Function{name:name, params:parameters, body:body}
+    return Function{Name:name, Params:parameters, Body:body}
 }
 
 func (parser *Parser) varDeclaration() AbstractStatement{
@@ -107,8 +117,8 @@ func (parser *Parser) varDeclaration() AbstractStatement{
     }
     parser.consume(SEMICOLON, "Expected ';' after variable declaration")
 
-    fmt.Println(fmt.Sprintf("%s %s", name.tokenType, initializer))
-    return Var{name:name, initializer: initializer}
+    fmt.Println(fmt.Sprintf("%s %s", name.TokenType, initializer))
+    return Var{Name:name, Initializer: initializer}
 }
 
 func (parser *Parser) block() []AbstractStatement {
@@ -135,7 +145,7 @@ func (parser *Parser) ifStatement() AbstractStatement {
         elseBranch = parser.statement()
     }
 
-    return If{condition: condition, thenBranch: thenBranch, elseBranch: elseBranch}
+    return If{Condition: condition, ThenBranch: thenBranch, ElseBranch: elseBranch}
 }
 
 func (parser *Parser) forStatement() AbstractStatement {
@@ -176,22 +186,22 @@ func (parser *Parser) forStatement() AbstractStatement {
     if increment != nil {
         body_statements := []AbstractStatement{}
         body_statements = append(body_statements, body)
-        body_statements = append(body_statements, Expression{expression: increment})
-        body = Block{statements: body_statements}
+        body_statements = append(body_statements, Expression{Expression: increment})
+        body = Block{Statements: body_statements}
     }
 
     if condition == nil {
-        condition = Literal{value: true}
+        condition = Literal{Value: true}
     }
 
-    body = While{condition: condition, body: body}
+    body = While{Condition: condition, Body: body}
 
     if initializer != nil {
         body_statements := []AbstractStatement{}
         body_statements = append(body_statements, initializer)
         body_statements = append(body_statements, body)
 
-        body = Block{statements: body_statements}
+        body = Block{Statements: body_statements}
     }
 
     return body
@@ -205,7 +215,7 @@ func (parser *Parser) whileStatement() AbstractStatement {
 
     body := parser.statement()
 
-    return While{condition: condition, body: body}
+    return While{Condition: condition, Body: body}
 }
 
 func (parser *Parser) returnStatement() AbstractStatement {
@@ -218,7 +228,7 @@ func (parser *Parser) returnStatement() AbstractStatement {
     }
 
     parser.consume(SEMICOLON, "Expect ';' after return value.")
-    return Return{keyword: keyword, value: value}
+    return Return{Keyword: keyword, Value: value}
 }
 
 
@@ -242,9 +252,9 @@ func (parser *Parser) assignment() AbstractExpression {
 		variable, ok := expr.(Variable)
 		if ok {
 
-			return Assign{name: variable.name, value: value}
+			return Assign{Name: variable.Name, Value: value}
 		} else {
-			panic(equals.tokenType + "Invalid assignment target")
+			panic(equals.TokenType + "Invalid assignment target")
 		}
 	}
 
@@ -258,7 +268,7 @@ func (parser *Parser) or() AbstractExpression {
 	for parser.match(OR) {
 		operator := parser.previous()
 		right := parser.and()
-		expr = Logical{left: expr, operator: operator, right: right}
+		expr = Logical{Left: expr, Operator: operator, Right: right}
 	}
 	return expr
 }
@@ -271,7 +281,7 @@ func (parser *Parser) and() AbstractExpression {
 
 		operator := parser.previous()
 		right := parser.equality()
-		expr := Logical{left: expr, operator: operator, right: right}
+		expr := Logical{Left: expr, Operator: operator, Right: right}
 		return expr
 	}
 
@@ -285,7 +295,7 @@ func (parser *Parser) equality() AbstractExpression {
 	for parser.match(BANG_EQUAL, EQUAL_EQUAL) {
 		operator := parser.previous()
 		right := parser.comparison()
-		expr := Binary{left: expr, operator: operator, right: right}
+		expr := Binary{Left: expr, Operator: operator, Right: right}
 		return expr
 	}
 	return expr
@@ -299,7 +309,7 @@ func (parser *Parser) comparison() AbstractExpression {
 
 		operator := parser.previous()
 		right := parser.primary()
-		expr := Binary{left: expr, operator: operator, right: right}
+		expr := Binary{Left: expr, Operator: operator, Right: right}
 		return expr
 	}
 
@@ -312,7 +322,7 @@ func (parser *Parser) term() AbstractExpression {
 	for parser.match(MINUS, PLUS) {
 		operator := parser.previous()
 		right := parser.factor()
-		expr = Binary{left: expr, operator: operator, right: right}
+		expr = Binary{Left: expr, Operator: operator, Right: right}
 		return expr
 	}
 
@@ -326,7 +336,7 @@ func (parser *Parser) factor() AbstractExpression {
 	for parser.match(SLASH, STAR) {
 		operator := parser.previous()
 		right := parser.unary()
-		expr := Binary{left: expr, operator: operator, right: right}
+		expr := Binary{Left: expr, Operator: operator, Right: right}
 		return expr
 	}
 
@@ -338,7 +348,7 @@ func (parser *Parser) unary() AbstractExpression {
 	if parser.match(BANG, MINUS) {
 		operator := parser.previous()
 		right := parser.unary()
-		expr := Unary{operator: operator, right: right}
+		expr := Unary{Operator: operator, Right: right}
 		return expr
 	}
 	return parser.call()
@@ -369,7 +379,7 @@ func (parser *Parser) finishCall(callee AbstractExpression) AbstractExpression {
     }
     paren := parser.consume(RIGHT_PAREN, "Expect ')' after arguments")
 
-    return Call{callee: callee, paren: paren, arguments: arguments }
+    return Call{Callee: callee, Paren: paren, Arguments: arguments }
 }
 
 func (parser *Parser) functionExpression() AbstractExpression {
@@ -388,7 +398,7 @@ func (parser *Parser) functionExpression() AbstractExpression {
         parser.consume(RIGHT_PAREN, "Expect ')' after parameters")
         parser.consume(LEFT_BRACE, "Expect '{' before function body")
         body := parser.block()
-        return FunctionExpression{params: parameters, body: body}
+        return FunctionExpression{Params: parameters, Body: body}
     }
 
     return parser.primary()
@@ -397,30 +407,30 @@ func (parser *Parser) functionExpression() AbstractExpression {
 func (parser *Parser) primary() AbstractExpression {
 
 	if parser.match(FALSE) {
-		return Literal{value: false}
+		return Literal{Value: false}
 	}
 
 	if parser.match(TRUE) {
-		return Literal{value: true}
+		return Literal{Value: true}
 	}
 
 	if parser.match(NIL) {
-		return Literal{value: nil}
+		return Literal{Value: nil}
 	}
 
 	if parser.match(NUMBER, STRING) {
-		expr := Literal{value: parser.previous().literal}
+		expr := Literal{Value: parser.previous().Literal}
 		return expr
 	}
 
 	if parser.match(IDENTIFIER) {
-		return Variable{name: parser.previous()}
+		return Variable{Name: parser.previous()}
 	}
 
 	if parser.match(LEFT_PAREN) {
 		expr := parser.expression()
 		parser.consume(RIGHT_PAREN, "Expect ')' after expression. ")
-		return Grouping{expression: expr}
+		return Grouping{Expression: expr}
 	}
 
 	panic("Expected expression")
@@ -430,7 +440,7 @@ func (parser *Parser) primary() AbstractExpression {
 * Control flow functions
  */
 func (parser *Parser) isAtEnd() bool {
-	return parser.peek().tokenType == EOF
+	return parser.peek().TokenType == EOF
 }
 
 func (parser *Parser) peek() Token {
@@ -466,7 +476,7 @@ func (parser *Parser) check(tokenType TokenType) bool {
 	if parser.isAtEnd() {
 		return false
 	}
-	return parser.peek().tokenType == tokenType
+	return parser.peek().TokenType == tokenType
 }
 
 func (parser *Parser) consume(tokenType TokenType, message string) Token {
@@ -474,6 +484,6 @@ func (parser *Parser) consume(tokenType TokenType, message string) Token {
 		return parser.advance()
 	}
 
-	m := fmt.Sprintf("%s %s", parser.peek().tokenType, message)
+	m := fmt.Sprintf("%s %s", parser.peek().TokenType, message)
 	panic(m)
 }
