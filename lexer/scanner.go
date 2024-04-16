@@ -119,7 +119,7 @@ func (scanner *Scanner) advance() string {
 func (scanner *Scanner) addTokenLiteral(tokenType TokenType, literal interface{}) {
 
     text := scanner.source[scanner.start:scanner.current]
-    newToken :=Token{tokenType, text, literal, scanner.line}
+    newToken :=Token{TokenType:tokenType, Lexeme: text, Literal: literal, Line:scanner.line}
     scanner.tokens = append(scanner.tokens, newToken)
 }
 

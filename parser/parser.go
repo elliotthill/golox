@@ -74,7 +74,8 @@ func (parser *Parser) statement() AbstractStatement {
 func (parser *Parser) printStatement() AbstractStatement {
 
 	value := parser.expression()
-	parser.consume(SEMICOLON, "Expected ; after value.")
+
+	parser.consume(SEMICOLON, "Print expected ; after value.")
 	return Print{Expression: value}
 }
 
@@ -323,7 +324,6 @@ func (parser *Parser) term() AbstractExpression {
 		operator := parser.previous()
 		right := parser.factor()
 		expr = Binary{Left: expr, Operator: operator, Right: right}
-		return expr
 	}
 
 	return expr

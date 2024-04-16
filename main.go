@@ -5,11 +5,21 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
-    "github.com/elliotthill/golox/interpreter"
-    "github.com/elliotthill/golox/parser"
-    "github.com/elliotthill/golox/lexer"
+
+	"github.com/elliotthill/golox/interpreter"
+	"github.com/elliotthill/golox/lexer"
+	"github.com/elliotthill/golox/parser"
 )
+
+
+var (
+    //Defaults outputs - capture to buffer during testing
+    defaultOut io.Writer = os.Stdin
+    defaultErr io.Writer = os.Stderr
+)
+
 
 func main() {
 
@@ -28,7 +38,7 @@ func main() {
 			return
 		}
 
-		Run(sourceCode, interpreter.NewInterpreter(), debug)
+		Run(sourceCode, interpreter.NewInterpreter(defaultOut, defaultErr), debug)
 
 	} else {
 
@@ -72,7 +82,7 @@ func Run(source string, interpreter *interpreter.Interpreter, debug bool) {
 func REPL(debug bool) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("> ")
-	interp := interpreter.NewInterpreter()
+	interp := interpreter.NewInterpreter(defaultOut, defaultErr)
 
 	for {
 		line, _, err := reader.ReadLine()

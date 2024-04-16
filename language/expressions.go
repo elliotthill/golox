@@ -79,7 +79,7 @@ type Grouping struct{
 }
 
 func (grouping Grouping) Accept(visitor ExpressionVisitor) interface{} {
-    return visitor.visitGroupingExpression(grouping)
+    return visitor.VisitGroupingExpression(grouping)
 }
 
 //Variable
@@ -130,7 +130,7 @@ func (funcExpr FunctionExpression) Accept(visitor ExpressionVisitor) interface{}
 type ExpressionVisitor interface {
     VisitAssignExpression(expression Assign) interface{}
     VisitBinaryExpression(expression Binary) interface{}
-    visitGroupingExpression(expression Grouping) interface{}
+    VisitGroupingExpression(expression Grouping) interface{}
     VisitLiteralExpression(expression Literal) interface{}
     VisitLogicalExpression(expression Logical) interface{}
     VisitTernaryExpression(expression Ternary) interface{}

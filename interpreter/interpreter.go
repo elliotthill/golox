@@ -2,9 +2,11 @@ package interpreter
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 	"strconv"
-    ."github.com/elliotthill/golox/language"
+
+	. "github.com/elliotthill/golox/language"
 )
 
 type Interpreter struct {
@@ -13,15 +15,18 @@ type Interpreter struct {
 	statements  []AbstractStatement
 	environment *Environment
 	globals     *Environment
+    stdOut      io.Writer               //We write to a buffer
+    stdErr      io.Writer
 }
 
-func NewInterpreter() *Interpreter {
+func NewInterpreter(stdOut io.Writer, stdErr io.Writer) *Interpreter {
 	interp := new(Interpreter)
 
 	//interp.environment = NewEnv(nil)
 	interp.globals = NewEnvironment(nil)
 	interp.environment = interp.globals
-	fmt.Println("Initialized interpreter")
+    interp.stdOut = stdOut
+    interp.stdErr = stdErr
 	return interp
 }
 
@@ -49,7 +54,8 @@ func (interp *Interpreter) execute(stmt AbstractStatement) {
 func (interp *Interpreter) VisitPrintStatement(stmt Print) interface{} {
 
 	value := interp.evaluate(stmt.Expression)
-	fmt.Println(interp.stringify(value))
+	//fmt.Println(interp.stringify(value))
+    interp.stdOut.Write([]byte(interp.stringify(value) +"\n"))
 	return nil
 }
 
